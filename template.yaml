@@ -1,0 +1,170 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  Subscriber for error logs
+
+Transform:
+  - AWS::Serverless-2016-10-31
+
+Parameters:
+  Environment:
+    Type: String
+    Default: prod
+    AllowedValues:
+      - prod
+      - test
+    Description: Environment for deploy
+
+Mappings:
+  EnvironmentMap:
+    prod:
+      certificate: adce1a21-90b4-4120-8548-111215e582f0
+      domainInternal: dbowland-batch-internal.dbowland.com
+      lambdaCleanupNumberOfThreads: 4
+      lambdaCleanupTable: dbowland-batch-lambda-cleanup
+      logStreamFunction: log-subscriber
+      project: dbowland-batch-subscriber
+      schedulerFunction: scheduler-service
+      zoneId: Z072422417XWM8PIXXSFA
+    test:
+      certificate: 6a48cba7-feb9-4de5-8cbf-d383140fcdef
+      domainInternal: dbowland-batch-internal.bowland.link
+      lambdaCleanupNumberOfThreads: 4
+      lambdaCleanupTable: dbowland-batch-lambda-cleanup-test
+      logStreamFunction: log-subscriber-test
+      project: dbowland-batch-test
+      schedulerFunction: scheduler-service-test
+      zoneId: Z01312547RGU1BYKIJXY
+
+Resources:
+  Api:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: v1
+      Auth:
+        ApiKeyRequired: true # sets for all methods
+        UsagePlan:
+          CreateUsagePlan: PER_API
+          Description: Usage plan for dbowland-batch
+      Domain:
+        DomainName: !FindInMap [EnvironmentMap, !Ref Environment, domainInternal]
+        CertificateArn: !Sub
+          - 'arn:aws:acm:us-east-1:${AWS::AccountId}:certificate/${Certificate}'
+          - Certificate: !FindInMap [EnvironmentMap, !Ref Environment, certificate]
+        EndpointConfiguration: EDGE
+        Route53:
+          HostedZoneId: !FindInMap [EnvironmentMap, !Ref Environment, zoneId]
+        BasePath:
+          - /v1
+
+  # Lambda
+
+  LambdaS3Cleanup:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Deletes unused lambda files from S3
+      Architectures:
+        - x86_64
+      Handler: src/handlers/s3-lambda-cleanup.s3LambdaCleanup
+      Environment:
+        Variables:
+          S3_LAMBDA_CLEANUP_TABLE_NAME: !FindInMap [EnvironmentMap, !Ref Environment, lambdaCleanupTable]
+          S3_LAMBDA_CLEANUP_NUMBER_OF_THREADS:
+            !FindInMap [EnvironmentMap, !Ref Environment, lambdaCleanupNumberOfThreads]
+      Events:
+        ApiKey:
+          Type: Api
+          Properties:
+            RestApiId: !Ref Api
+            Path: /s3-lambda-cleanup
+            Method: post
+            Auth:
+              ApiKeyRequired: true
+      MemorySize: 1536
+      Policies:
+        # Give Lambda basic execution Permission
+        - AWSLambdaBasicExecutionRole
+      Runtime: nodejs20.x
+      Tags:
+        'created-by': 'dbowland-batch'
+        'created-for': 'dbowland'
+        'environment': !Ref Environment
+      Timeout: 210 # 3.5 minutes
+      Tracing: Active
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: 'es2020'
+        Sourcemap: true
+        EntryPoints:
+          - src/handlers/s3-lambda-cleanup.ts
+
+  LambdaS3CleanupLogGroup:
+    Type: AWS::Logs::LogGroup
+    DependsOn: [LambdaS3Cleanup]
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${LambdaS3Cleanup}
+      RetentionInDays: 30
+      Tags:
+        - Key: 'created-by'
+          Value: 'dbowland-batch'
+        - Key: 'created-for'
+          Value: 'dbowland'
+        - Key: 'environment'
+          Value: !Ref Environment
+
+  LambdaS3CleanupLogGroupSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Properties:
+      DestinationArn: !Sub
+        - 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${Function}'
+        - Function: !FindInMap [EnvironmentMap, !Ref Environment, logStreamFunction]
+      FilterPattern: '[timestamp, uuid, level="ERROR", message]'
+      LogGroupName: !Ref LambdaS3CleanupLogGroup
+
+  # Database
+
+  LambdaCleanupTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      PrimaryKey:
+        Name: Project
+        Type: String
+      TableName: !FindInMap [EnvironmentMap, !Ref Environment, lambdaCleanupTable]
+      Tags:
+        'created-by': 'dbowland-batch'
+        'created-for': 'dbowland'
+        'environment': !Ref Environment
+
+  # EventBridge
+
+  LambdaCleanupEvent:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Deletes unused lambda files from S3
+      ScheduleExpression: 'cron(19 2 ? * 2 *)'
+      State: ENABLED
+      Targets:
+        - Arn: !Sub
+            - 'arn:aws:lambda:us-east-2:${AWS::AccountId}:function:${FunctionName}'
+            - FunctionName: !FindInMap [EnvironmentMap, !Ref Environment, schedulerFunction]
+          Id: SchedulerLambda
+          InputTransformer:
+            InputPathsMap:
+              'resources': '$.resources'
+            InputTemplate: !Sub
+              - |
+                {
+                  "resources": <resources>,
+                  "request": {
+                    "url": "https://${Domain}/v1/s3-lambda-cleanup",
+                    "method": "POST",
+                    "data": { }
+                  },
+                  "apiKey": {
+                    "id": "${ApiKey}",
+                    "region": "us-east-1"
+                  }
+                }
+              - ApiKey: !Sub '${Api.ApiKey.APIKeyId}'
+                Domain: !FindInMap [EnvironmentMap, !Ref Environment, domainInternal]
