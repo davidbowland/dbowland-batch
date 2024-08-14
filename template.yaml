@@ -23,6 +23,13 @@ Mappings:
       lambdaCleanupTable: dbowland-batch-lambda-cleanup
       logStreamFunction: log-subscriber
       project: dbowland-batch-subscriber
+      s3BucketChoosee: choosee-lambda
+      s3BucketDbdBuildMaker: dbd-build-maker-lambda
+      s3BucketDbowlandEast1: dbowland-lambda-east-1
+      s3BucketDbowlandEast2: dbowland-lambda-east-2
+      s3BucketEmails: emails-lambda
+      s3BucketJokes: jokes-lambda
+      s3BucketLinks: links-lambda
       schedulerFunction: scheduler-service
       zoneId: Z072422417XWM8PIXXSFA
     test:
@@ -32,6 +39,13 @@ Mappings:
       lambdaCleanupTable: dbowland-batch-lambda-cleanup-test
       logStreamFunction: log-subscriber-test
       project: dbowland-batch-test
+      s3BucketChoosee: choosee-lambda-test
+      s3BucketDbdBuildMaker: dbd-build-maker-lambda-test
+      s3BucketDbowlandEast1: dbowland-lambda-east-1-test
+      s3BucketDbowlandEast2: dbowland-lambda-east-2-test
+      s3BucketEmails: emails-lambda-test
+      s3BucketJokes: jokes-lambda-test
+      s3BucketLinks: links-lambda-test
       schedulerFunction: scheduler-service-test
       zoneId: Z01312547RGU1BYKIJXY
 
@@ -84,6 +98,21 @@ Resources:
         - AWSLambdaBasicExecutionRole
         - DynamoDBReadPolicy:
             TableName: !Ref LambdaCleanupTable
+        # Buckets of projects managed by this lambda
+        - S3CrudPolicy:
+            BucketName: !FindInMap [EnvironmentMap, !Ref Environment, s3BucketChoosee]
+        - S3CrudPolicy:
+            BucketName: !FindInMap [EnvironmentMap, !Ref Environment, s3BucketDbdBuildMaker]
+        - S3CrudPolicy:
+            BucketName: !FindInMap [EnvironmentMap, !Ref Environment, s3BucketDbowlandEast1]
+        - S3CrudPolicy:
+            BucketName: !FindInMap [EnvironmentMap, !Ref Environment, s3BucketDbowlandEast2]
+        - S3CrudPolicy:
+            BucketName: !FindInMap [EnvironmentMap, !Ref Environment, s3BucketEmails]
+        - S3CrudPolicy:
+            BucketName: !FindInMap [EnvironmentMap, !Ref Environment, s3BucketJokes]
+        - S3CrudPolicy:
+            BucketName: !FindInMap [EnvironmentMap, !Ref Environment, s3BucketLinks]
       Runtime: nodejs20.x
       Tags:
         'created-by': 'dbowland-batch'
