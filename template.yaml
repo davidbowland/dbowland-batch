@@ -81,14 +81,15 @@ Resources:
               ApiKeyRequired: true
       MemorySize: 1536
       Policies:
-        # Give Lambda basic execution Permission
         - AWSLambdaBasicExecutionRole
+        - DynamoDBReadPolicy:
+            TableName: !Ref LambdaCleanupTable
       Runtime: nodejs20.x
       Tags:
         'created-by': 'dbowland-batch'
         'created-for': 'dbowland'
         'environment': !Ref Environment
-      Timeout: 210 # 3.5 minutes
+      Timeout: 180
       Tracing: Active
     Metadata:
       BuildMethod: esbuild
