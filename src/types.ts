@@ -15,6 +15,7 @@ export interface LambdaObjectsToDelete {
 }
 
 export interface OldestLambdaFileTracker {
+  cutoffDate: Date
   oldestTime?: Date
   secondOldestTime?: Date
 }

@@ -1,24 +1,25 @@
 import { deleteS3Object, listS3Objects, s3ClientEast1, s3ClientEast2 } from '../services/s3'
 import { LambdaObjectsToDelete, LambdaRegion, OldestLambdaFileTracker, S3Client, S3Object } from '../types'
+import { s3LambdaCleanupDaysToKeep, s3LambdaCleanupNumberOfThreads } from '../config'
 import { log } from '../utils/logging'
 import { processPromiseQueue } from '../utils/parallel'
-import { s3LambdaCleanupNumberOfThreads } from '../config'
 import { scanLambdaCleanupProjects } from '../services/dynamodb'
 
 /* S3 object processing */
 
 const secondOldestReducer = (tracker: OldestLambdaFileTracker, s3Object: S3Object): OldestLambdaFileTracker => {
-  if (!s3Object.key.endsWith('.template')) return tracker
+  if (!s3Object.key.endsWith('.template') || s3Object.modified >= tracker.cutoffDate) return tracker
   if (tracker.oldestTime === undefined || s3Object.modified > tracker.oldestTime) {
     return {
+      cutoffDate: tracker.cutoffDate,
       oldestTime: s3Object.modified,
       secondOldestTime: tracker.oldestTime,
     }
-  } else if (
-    tracker.secondOldestTime === undefined ||
-    (s3Object.modified > tracker.secondOldestTime && s3Object.modified < tracker.oldestTime)
+  } else if (tracker.secondOldestTime === undefined ||
+      (s3Object.modified > tracker.secondOldestTime && s3Object.modified < tracker.oldestTime)
   ) {
     return {
+      cutoffDate: tracker.cutoffDate,
       oldestTime: tracker.oldestTime,
       secondOldestTime: s3Object.modified,
     }
@@ -27,7 +28,13 @@ const secondOldestReducer = (tracker: OldestLambdaFileTracker, s3Object: S3Objec
 }
 
 const findObjectsToDelete = (s3Objects: S3Object[]): LambdaObjectsToDelete => {
-  const oldestFileTracker = s3Objects.reduce(secondOldestReducer, {} as OldestLambdaFileTracker)
+  const currentDate = new Date()
+  const cutoffDate = new Date(
+    currentDate.getUTCFullYear(),
+    currentDate.getUTCMonth(),
+    currentDate.getUTCDate() - s3LambdaCleanupDaysToKeep
+  )
+  const oldestFileTracker = s3Objects.reduce(secondOldestReducer, { cutoffDate } as OldestLambdaFileTracker)
   if (oldestFileTracker.secondOldestTime === undefined) return { objectsToDelete: [] }
   const secondOldestTime = oldestFileTracker.secondOldestTime
   // TypeScript isn't smart enough to recognize oldestFileTracker.secondOldestTime cannot be undefined

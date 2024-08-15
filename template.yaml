@@ -81,6 +81,7 @@ Resources:
       Handler: src/handlers/s3-lambda-cleanup.s3LambdaCleanup
       Environment:
         Variables:
+          S3_LAMBDA_CLEANUP_DAYS_TO_KEEP: 7
           S3_LAMBDA_CLEANUP_TABLE_NAME: !FindInMap [EnvironmentMap, !Ref Environment, lambdaCleanupTable]
           S3_LAMBDA_CLEANUP_NUMBER_OF_THREADS:
             !FindInMap [EnvironmentMap, !Ref Environment, lambdaCleanupNumberOfThreads]
