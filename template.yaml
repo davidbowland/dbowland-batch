@@ -13,6 +13,9 @@ Parameters:
       - prod
       - test
     Description: Environment for deploy
+  SmsApiKey:
+    Type: String
+    Description: API key for sms-queue-api
 
 Mappings:
   EnvironmentMap:
@@ -31,7 +34,11 @@ Mappings:
       s3BucketJokes: jokes-lambda
       s3BucketLinks: links-lambda
       schedulerFunction: scheduler-service
+      smsApiUrl: https://sms-queue-api.dbowland.com/v1
       zoneId: Z072422417XWM8PIXXSFA
+      zooTourSmsNumberOfThreads: 2
+      zooTourStatusNumberOfThreads: 5
+      zooTourTable: dbowland-batch-zoo-tour
     test:
       certificate: 6a48cba7-feb9-4de5-8cbf-d383140fcdef
       domainInternal: dbowland-batch-internal.bowland.link
@@ -47,7 +54,11 @@ Mappings:
       s3BucketJokes: jokes-lambda-test
       s3BucketLinks: links-lambda-test
       schedulerFunction: scheduler-service-test
+      smsApiUrl: https://sms-queue-api.bowland.link/v1
       zoneId: Z01312547RGU1BYKIJXY
+      zooTourSmsNumberOfThreads: 2
+      zooTourStatusNumberOfThreads: 2
+      zooTourTable: dbowland-batch-zoo-tour-test
 
 Resources:
   Api:
@@ -78,7 +89,7 @@ Resources:
       Description: Deletes unused lambda files from S3
       Architectures:
         - x86_64
-      Handler: src/handlers/s3-lambda-cleanup.s3LambdaCleanup
+      Handler: src/handlers/s3-lambda-cleanup.s3LambdaCleanupHandler
       Environment:
         Variables:
           S3_LAMBDA_CLEANUP_DAYS_TO_KEEP: 7
@@ -97,7 +108,7 @@ Resources:
       MemorySize: 1536
       Policies:
         - AWSLambdaBasicExecutionRole
-        - DynamoDBReadPolicy:
+        - DynamoDBCrudPolicy:
             TableName: !Ref LambdaCleanupTable
         # Buckets of projects managed by this lambda
         - S3CrudPolicy:
@@ -132,7 +143,6 @@ Resources:
 
   LambdaS3CleanupLogGroup:
     Type: AWS::Logs::LogGroup
-    DependsOn: [LambdaS3Cleanup]
     Properties:
       LogGroupName: !Sub /aws/lambda/${LambdaS3Cleanup}
       RetentionInDays: 30
@@ -153,6 +163,72 @@ Resources:
       FilterPattern: '[timestamp, uuid, level="ERROR", message]'
       LogGroupName: !Ref LambdaS3CleanupLogGroup
 
+  ZooTourCheckLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      Description: Check for new St Louis Zoo tours
+      Architectures:
+        - x86_64
+      Handler: src/handlers/zoo-tour-check.zooTourCheckHandler
+      Environment:
+        Variables:
+          SMS_API_KEY: !Ref SmsApiKey
+          SMS_API_URL: !FindInMap [EnvironmentMap, !Ref Environment, smsApiUrl]
+          ZOO_TOUR_SMS_NUMBER_OF_THREADS: !FindInMap [EnvironmentMap, !Ref Environment, zooTourSmsNumberOfThreads]
+          ZOO_TOUR_STATUS_NUMBER_OF_THREADS: !FindInMap [EnvironmentMap, !Ref Environment, zooTourStatusNumberOfThreads]
+          ZOO_TOUR_TABLE: !FindInMap [EnvironmentMap, !Ref Environment, zooTourTable]
+      Events:
+        ApiKey:
+          Type: Api
+          Properties:
+            RestApiId: !Ref Api
+            Path: /check-zoo-tour-status
+            Method: post
+            Auth:
+              ApiKeyRequired: true
+      MemorySize: 1536
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ZooTourTable
+      Runtime: nodejs20.x
+      Tags:
+        'created-by': 'dbowland-batch'
+        'created-for': 'zoo-tour'
+        'environment': !Ref Environment
+      Timeout: 300
+      Tracing: Active
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: 'es2020'
+        Sourcemap: true
+        EntryPoints:
+          - src/handlers/zoo-tour-check.ts
+
+  ZooTourCheckLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${ZooTourCheckLambda}
+      RetentionInDays: 30
+      Tags:
+        - Key: 'created-by'
+          Value: 'dbowland-batch'
+        - Key: 'created-for'
+          Value: 'zoo-tour'
+        - Key: 'environment'
+          Value: !Ref Environment
+
+  ZooTourCheckLogGroupSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    Properties:
+      DestinationArn: !Sub
+        - 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${Function}'
+        - Function: !FindInMap [EnvironmentMap, !Ref Environment, logStreamFunction]
+      FilterPattern: '[timestamp, uuid, level="ERROR", message]'
+      LogGroupName: !Ref ZooTourCheckLogGroup
+
   # Database
 
   LambdaCleanupTable:
@@ -166,6 +242,25 @@ Resources:
         'created-by': 'dbowland-batch'
         'created-for': 'dbowland'
         'environment': !Ref Environment
+
+  ZooTourTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: TourId
+          AttributeType: S
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: TourId
+          KeyType: HASH
+      TableName: !FindInMap [EnvironmentMap, !Ref Environment, zooTourTable]
+      Tags:
+        - Key: 'created-by'
+          Value: 'dbowland-batch'
+        - Key: 'created-for'
+          Value: 'zoo-tour'
+        - Key: 'environment'
+          Value: !Ref Environment
 
   # EventBridge
 
@@ -189,6 +284,99 @@ Resources:
                   "resources": <resources>,
                   "request": {
                     "url": "https://${Domain}/v1/s3-lambda-cleanup",
+                    "method": "POST",
+                    "data": { }
+                  },
+                  "apiKey": {
+                    "id": "${ApiKey}",
+                    "region": "us-east-1"
+                  }
+                }
+              - ApiKey: !Sub '${Api.ApiKey.APIKeyId}'
+                Domain: !FindInMap [EnvironmentMap, !Ref Environment, domainInternal]
+
+  ZooCheckEarlyEvent:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Deletes unused lambda files from S3
+      ScheduleExpression: 'cron(0 6-22/2 1-6 2 ? *)'
+      State: ENABLED
+      Targets:
+        - Arn: !Sub
+            - 'arn:aws:lambda:us-east-2:${AWS::AccountId}:function:${FunctionName}'
+            - FunctionName: !FindInMap [EnvironmentMap, !Ref Environment, schedulerFunction]
+          Id: SchedulerLambda
+          InputTransformer:
+            InputPathsMap:
+              'resources': '$.resources'
+            InputTemplate: !Sub
+              - |
+                {
+                  "resources": <resources>,
+                  "request": {
+                    "url": "https://${Domain}/v1/check-zoo-tour-status",
+                    "method": "POST",
+                    "data": { }
+                  },
+                  "apiKey": {
+                    "id": "${ApiKey}",
+                    "region": "us-east-1"
+                  }
+                }
+              - ApiKey: !Sub '${Api.ApiKey.APIKeyId}'
+                Domain: !FindInMap [EnvironmentMap, !Ref Environment, domainInternal]
+
+  ZooCheckMiddleEvent:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Deletes unused lambda files from S3
+      ScheduleExpression: 'cron(0 6-22 7-8 2 ? *)'
+      State: ENABLED
+      Targets:
+        - Arn: !Sub
+            - 'arn:aws:lambda:us-east-2:${AWS::AccountId}:function:${FunctionName}'
+            - FunctionName: !FindInMap [EnvironmentMap, !Ref Environment, schedulerFunction]
+          Id: SchedulerLambda
+          InputTransformer:
+            InputPathsMap:
+              'resources': '$.resources'
+            InputTemplate: !Sub
+              - |
+                {
+                  "resources": <resources>,
+                  "request": {
+                    "url": "https://${Domain}/v1/check-zoo-tour-status",
+                    "method": "POST",
+                    "data": { }
+                  },
+                  "apiKey": {
+                    "id": "${ApiKey}",
+                    "region": "us-east-1"
+                  }
+                }
+              - ApiKey: !Sub '${Api.ApiKey.APIKeyId}'
+                Domain: !FindInMap [EnvironmentMap, !Ref Environment, domainInternal]
+
+  ZooCheckExpectedEvent:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: Deletes unused lambda files from S3
+      ScheduleExpression: 'cron(0-59/30 6-22 9-28 2 ? *)'
+      State: ENABLED
+      Targets:
+        - Arn: !Sub
+            - 'arn:aws:lambda:us-east-2:${AWS::AccountId}:function:${FunctionName}'
+            - FunctionName: !FindInMap [EnvironmentMap, !Ref Environment, schedulerFunction]
+          Id: SchedulerLambda
+          InputTransformer:
+            InputPathsMap:
+              'resources': '$.resources'
+            InputTemplate: !Sub
+              - |
+                {
+                  "resources": <resources>,
+                  "request": {
+                    "url": "https://${Domain}/v1/check-zoo-tour-status",
                     "method": "POST",
                     "data": { }
                   },

@@ -1,3 +1,5 @@
+import { mocked } from 'jest-mock'
+
 import * as s3 from '@services/s3'
 import { LambdaCleanupProject, LambdaRegion, S3Client } from '@types'
 import {
@@ -9,9 +11,8 @@ import {
   s3ObjectTooNew,
   s3ObjectTooNewTwo,
 } from '../__mocks__'
-import { mocked } from 'jest-mock'
 import { processPromiseQueue } from '@utils/parallel'
-import { s3LambdaCleanup } from '@handlers/s3-lambda-cleanup'
+import { s3LambdaCleanupHandler } from '@handlers/s3-lambda-cleanup'
 import { s3LambdaCleanupNumberOfThreads } from '@config'
 import { scanLambdaCleanupProjects } from '@services/dynamodb'
 
@@ -35,9 +36,9 @@ describe('s3-lambda-cleanup', () => {
     jest.useFakeTimers().setSystemTime(s3MockTime)
   })
 
-  describe('s3LambdaCleanup', () => {
-    test('expect the second-oldest template file and older files are deleted', async () => {
-      await s3LambdaCleanup()
+  describe('s3LambdaCleanupHandler', () => {
+    it('returns the second-oldest template file and deletes older files', async () => {
+      await s3LambdaCleanupHandler()
 
       expect(scanLambdaCleanupProjects).toHaveBeenCalledTimes(1)
       expect(s3.listS3Objects).toHaveBeenCalledWith(
@@ -58,7 +59,7 @@ describe('s3-lambda-cleanup', () => {
       })
     })
 
-    test('expect us-east-2 client in us-east-2 region', async () => {
+    it('returns us-east-2 client in us-east-2 region', async () => {
       const usEast2Project: LambdaCleanupProject = {
         ...lambdaCleanupProject,
         prefixes: ['lambda-one/', 'lambda-two/'],
@@ -67,7 +68,7 @@ describe('s3-lambda-cleanup', () => {
       mocked(scanLambdaCleanupProjects).mockResolvedValueOnce([usEast2Project])
       mocked(s3).listS3Objects.mockResolvedValueOnce([s3Object, s3ObjectEvenOlder, s3ObjectOlder])
       mocked(s3).listS3Objects.mockResolvedValueOnce([])
-      await s3LambdaCleanup()
+      await s3LambdaCleanupHandler()
 
       expect(scanLambdaCleanupProjects).toHaveBeenCalledTimes(1)
       expect(s3.listS3Objects).toHaveBeenCalledWith(s3.s3ClientEast2, usEast2Project.bucket, usEast2Project.prefixes[0])
@@ -82,36 +83,36 @@ describe('s3-lambda-cleanup', () => {
       expect(s3.deleteS3Object).toHaveBeenCalledTimes(2)
     })
 
-    test('expect invalid region rejects', async () => {
+    it('rejects when region is invalid', async () => {
       const invalidRegionProject: LambdaCleanupProject = {
         ...lambdaCleanupProject,
         region: 'invalid-region' as LambdaRegion,
       }
       mocked(scanLambdaCleanupProjects).mockResolvedValueOnce([invalidRegionProject])
 
-      await expect(s3LambdaCleanup()).rejects.toThrow('Invalid region: invalid-region')
+      await expect(s3LambdaCleanupHandler()).rejects.toThrow('Invalid region: invalid-region')
     })
 
-    test('expect no files deleted when no second-oldest template files exist', async () => {
+    it('deletes no files when no second-oldest template files exist', async () => {
       const secondOldestNotTemplate = { ...s3ObjectEvenOlder, key: 'test-not-template' }
       mocked(s3).listS3Objects.mockResolvedValueOnce([s3Object, secondOldestNotTemplate])
-      await s3LambdaCleanup()
+      await s3LambdaCleanupHandler()
 
       expect(s3.listS3Objects).toHaveBeenCalledTimes(1)
       expect(s3.deleteS3Object).toHaveBeenCalledTimes(0)
     })
 
-    test('expect no files deleted when all files within cutoff time', async () => {
+    it('deletes no files when all files within cutoff time', async () => {
       mocked(s3).listS3Objects.mockResolvedValueOnce([s3ObjectTooNew, s3ObjectTooNewTwo])
-      await s3LambdaCleanup()
+      await s3LambdaCleanupHandler()
 
       expect(s3.listS3Objects).toHaveBeenCalledTimes(1)
       expect(s3.deleteS3Object).toHaveBeenCalledTimes(0)
     })
 
-    test('expect second-oldest file not deleted when newest file is within cutoff', async () => {
+    it('does not delete second-oldest file when newest file is within cutoff', async () => {
       mocked(s3).listS3Objects.mockResolvedValueOnce([s3Object, s3ObjectTooNew])
-      await s3LambdaCleanup()
+      await s3LambdaCleanupHandler()
 
       expect(s3.listS3Objects).toHaveBeenCalledTimes(1)
       expect(s3.deleteS3Object).toHaveBeenCalledTimes(0)

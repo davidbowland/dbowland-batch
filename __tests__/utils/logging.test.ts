@@ -45,7 +45,7 @@ describe('logging', () => {
       mocked(AWSXRay).captureAWSv3Client.mockReturnValue(capturedS3)
     })
 
-    test('expect AWSXRay.captureAWSv3Client when x-ray is enabled (not running locally)', () => {
+    it('returns AWSXRay.captureAWSv3Client when x-ray is enabled (not running locally)', () => {
       process.env.AWS_SAM_LOCAL = 'false'
       const result = xrayCapture(s3)
 
@@ -53,7 +53,7 @@ describe('logging', () => {
       expect(result).toEqual(capturedS3)
     })
 
-    test('expect same object when x-ray is disabled (running locally)', () => {
+    it('returns same object when x-ray is disabled (running locally)', () => {
       process.env.AWS_SAM_LOCAL = 'true'
       const result = xrayCapture(s3)
 
@@ -63,14 +63,14 @@ describe('logging', () => {
   })
 
   describe('xrayCaptureHttps', () => {
-    test('expect AWSXRay.captureHTTPsGlobal when x-ray is enabled (not running locally)', () => {
+    it('returns AWSXRay.captureHTTPsGlobal when x-ray is enabled (not running locally)', () => {
       process.env.AWS_SAM_LOCAL = 'false'
       xrayCaptureHttps()
 
       expect(mocked(AWSXRay).captureHTTPsGlobal).toHaveBeenCalledWith(https)
     })
 
-    test('expect same object when x-ray is disabled (running locally)', () => {
+    it('returns same object when x-ray is disabled (running locally)', () => {
       process.env.AWS_SAM_LOCAL = 'true'
       xrayCaptureHttps()
 

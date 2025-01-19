@@ -1,5 +1,6 @@
-import { deleteS3Object, listS3Objects } from '@services/s3'
 import { S3Client } from '@aws-sdk/client-s3'
+
+import { deleteS3Object, listS3Objects } from '@services/s3'
 
 const mockSend = jest.fn()
 jest.mock('@aws-sdk/client-s3', () => ({
@@ -19,7 +20,7 @@ describe('S3', () => {
   const mockS3Client = new S3Client()
 
   describe('deleteS3Object', () => {
-    test('expect key passed to mock', async () => {
+    it('passes key to mock', async () => {
       await deleteS3Object(mockS3Client, bucket, key)
 
       expect(mockSend).toHaveBeenCalledWith({
@@ -28,7 +29,7 @@ describe('S3', () => {
       })
     })
 
-    test('expect reject when promise rejects', async () => {
+    it('rejects when promise rejects', async () => {
       const rejectReason = 'unable to foo the bar'
       mockSend.mockRejectedValueOnce(rejectReason)
 
@@ -57,14 +58,14 @@ describe('S3', () => {
       mockSend.mockResolvedValue(responseNoContinuation)
     })
 
-    test('expect no results when no files', async () => {
+    it('returns no results when no files', async () => {
       mockSend.mockResolvedValueOnce({})
 
       const result = await listS3Objects(mockS3Client, 'my-bucket', 'my-prefix')
       expect(result).toEqual([])
     })
 
-    test('expect non-truncated results when results are not truncated', async () => {
+    it('returns non-truncated results when results are not truncated', async () => {
       const result = await listS3Objects(mockS3Client, 'my-bucket', 'my-prefix')
       expect(result).toEqual([
         {
@@ -78,7 +79,7 @@ describe('S3', () => {
       ])
     })
 
-    test('expect all results when results are truncated', async () => {
+    it('returns all results when results are truncated', async () => {
       mockSend.mockResolvedValueOnce(responseWithContinuation)
 
       const result = await listS3Objects(mockS3Client, 'my-bucket', 'my-prefix')
@@ -102,7 +103,7 @@ describe('S3', () => {
       ])
     })
 
-    test('expect reject when promise rejects', async () => {
+    it('rejects when promise rejects', async () => {
       const rejectReason = 'unable to foo the bar'
       mockSend.mockRejectedValueOnce(rejectReason)
 

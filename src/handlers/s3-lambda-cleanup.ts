@@ -15,8 +15,9 @@ const secondOldestReducer = (tracker: OldestLambdaFileTracker, s3Object: S3Objec
       oldestTime: s3Object.modified,
       secondOldestTime: tracker.oldestTime,
     }
-  } else if (tracker.secondOldestTime === undefined ||
-      (s3Object.modified > tracker.secondOldestTime && s3Object.modified < tracker.oldestTime)
+  } else if (
+    tracker.secondOldestTime === undefined ||
+    (s3Object.modified > tracker.secondOldestTime && s3Object.modified < tracker.oldestTime)
   ) {
     return {
       cutoffDate: tracker.cutoffDate,
@@ -49,7 +50,7 @@ const cleanUpPrefix = async (s3Client: S3Client, bucket: string, prefix: string)
   log('Determined objects to delete', { bucket, objectsToDelete, prefix, secondOldestTime })
   const promiseFn = (obj: S3Object) =>
     deleteS3Object(s3Client, bucket, obj.key).then(() => log('Object deleted', { bucket, key: obj.key }))
-  return processPromiseQueue(promiseFn, objectsToDelete, { concurrency: s3LambdaCleanupNumberOfThreads })
+  return await processPromiseQueue(promiseFn, objectsToDelete, { concurrency: s3LambdaCleanupNumberOfThreads })
 }
 
 const getS3ClientByRegion = (region: LambdaRegion): S3Client => {
@@ -65,12 +66,12 @@ const getS3ClientByRegion = (region: LambdaRegion): S3Client => {
 
 /* Handler */
 
-export const s3LambdaCleanup = async () => {
+export const s3LambdaCleanupHandler = async () => {
   const cleanupProjects = await scanLambdaCleanupProjects()
   const flattenedCleanupProjects = cleanupProjects.flatMap((project) =>
     project.prefixes.map((prefix: string) => ({ ...project, prefix }))
   )
   const promiseFn = ({ bucket, prefix, region }: (typeof flattenedCleanupProjects)[0]) =>
     cleanUpPrefix(getS3ClientByRegion(region), bucket, prefix)
-  return processPromiseQueue(promiseFn, flattenedCleanupProjects)
+  return await processPromiseQueue(promiseFn, flattenedCleanupProjects)
 }
