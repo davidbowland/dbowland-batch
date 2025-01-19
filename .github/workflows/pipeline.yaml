@@ -82,10 +82,10 @@ jobs:
             --capabilities CAPABILITY_IAM \
             --region ${TESTING_REGION} \
             --s3-bucket ${TESTING_ARTIFACTS_BUCKET} \
-            --s3-prefix sms-queue-service-test \
+            --s3-prefix dbowland-batch-test \
             --no-fail-on-empty-changeset \
             --role-arn ${TESTING_CLOUDFORMATION_EXECUTION_ROLE} \
-            --parameter-overrides 'Environment=test SmsApiKey=${TESTING_SMS_API_KEY}'
+            --parameter-overrides "Environment=test SmsApiKey=${TESTING_SMS_API_KEY}"
 
   build-and-package:
     name: Build and package lambda
@@ -124,7 +124,7 @@ jobs:
         run: |
           sam package \
             --s3-bucket ${TESTING_ARTIFACTS_BUCKET} \
-            --s3-prefix sms-queue-service-test \
+            --s3-prefix dbowland-batch-test \
             --region ${TESTING_REGION} \
             --output-template-file packaged-testing.yaml
 
@@ -148,7 +148,7 @@ jobs:
         run: |
           sam package \
             --s3-bucket ${PROD_ARTIFACTS_BUCKET} \
-            --s3-prefix sms-queue-service \
+            --s3-prefix dbowland-batch \
             --region ${PROD_REGION} \
             --output-template-file packaged-prod.yaml
 
@@ -193,10 +193,10 @@ jobs:
             --capabilities CAPABILITY_IAM \
             --region ${TESTING_REGION} \
             --s3-bucket ${TESTING_ARTIFACTS_BUCKET} \
-            --s3-prefix sms-queue-service-test \
+            --s3-prefix dbowland-batch-test \
             --no-fail-on-empty-changeset \
             --role-arn ${TESTING_CLOUDFORMATION_EXECUTION_ROLE} \
-            --parameter-overrides 'Environment=test SmsApiKey=${TESTING_SMS_API_KEY}'
+            --parameter-overrides "Environment=test SmsApiKey=${TESTING_SMS_API_KEY}"
 
   deploy-prod:
     name: Deploy to production
@@ -234,7 +234,7 @@ jobs:
             --capabilities CAPABILITY_IAM \
             --region ${PROD_REGION} \
             --s3-bucket ${PROD_ARTIFACTS_BUCKET} \
-            --s3-prefix sms-queue-service \
+            --s3-prefix dbowland-batch \
             --no-fail-on-empty-changeset \
             --role-arn ${PROD_CLOUDFORMATION_EXECUTION_ROLE} \
             --parameter-overrides 'SmsApiKey=${PROD_SMS_API_KEY}'
