@@ -295,11 +295,11 @@ Resources:
               - ApiKey: !Sub '${Api.ApiKey.APIKeyId}'
                 Domain: !FindInMap [EnvironmentMap, !Ref Environment, domainInternal]
 
-  ZooCheckEarlyEvent:
+  ZooCheckDailyEvent:
     Type: AWS::Events::Rule
     Properties:
-      Description: Deletes unused lambda files from S3
-      ScheduleExpression: 'cron(0 6-22/2 1-6 2 ? *)'
+      Description: Checks for zoo tour updates at 10am and 2pm daily until February
+      ScheduleExpression: 'cron(0 16,20 * 1 ? 2025)'
       State: ENABLED
       Targets:
         - Arn: !Sub
@@ -326,11 +326,11 @@ Resources:
               - ApiKey: !Sub '${Api.ApiKey.APIKeyId}'
                 Domain: !FindInMap [EnvironmentMap, !Ref Environment, domainInternal]
 
-  ZooCheckMiddleEvent:
+  ZooCheckEarlyEvent:
     Type: AWS::Events::Rule
     Properties:
-      Description: Deletes unused lambda files from S3
-      ScheduleExpression: 'cron(0 6-22 7-8 2 ? *)'
+      Description: Checks for zoo tour updates every hour from 6am to 10pm, Feb 1 to Feb 7
+      ScheduleExpression: 'cron(0 0-4,12-23 1-7 2 ? 2025)'
       State: ENABLED
       Targets:
         - Arn: !Sub
@@ -360,8 +360,39 @@ Resources:
   ZooCheckExpectedEvent:
     Type: AWS::Events::Rule
     Properties:
+      Description: Checks for zoo tour updates every 30 minutes from 6am to 10pm, Feb 8 to Feb 28
+      ScheduleExpression: 'cron(0-59/30 0-4,12-23 8-28 2 ? 2025)'
+      State: ENABLED
+      Targets:
+        - Arn: !Sub
+            - 'arn:aws:lambda:us-east-2:${AWS::AccountId}:function:${FunctionName}'
+            - FunctionName: !FindInMap [EnvironmentMap, !Ref Environment, schedulerFunction]
+          Id: SchedulerLambda
+          InputTransformer:
+            InputPathsMap:
+              'resources': '$.resources'
+            InputTemplate: !Sub
+              - |
+                {
+                  "resources": <resources>,
+                  "request": {
+                    "url": "https://${Domain}/v1/check-zoo-tour-status",
+                    "method": "POST",
+                    "data": { }
+                  },
+                  "apiKey": {
+                    "id": "${ApiKey}",
+                    "region": "us-east-1"
+                  }
+                }
+              - ApiKey: !Sub '${Api.ApiKey.APIKeyId}'
+                Domain: !FindInMap [EnvironmentMap, !Ref Environment, domainInternal]
+
+  ZooCheckLateEvent:
+    Type: AWS::Events::Rule
+    Properties:
       Description: Deletes unused lambda files from S3
-      ScheduleExpression: 'cron(0-59/30 6-22 9-28 2 ? *)'
+      ScheduleExpression: 'cron(* 0-4/2,12-23/2 * 3-12 ? 2025)'
       State: ENABLED
       Targets:
         - Arn: !Sub

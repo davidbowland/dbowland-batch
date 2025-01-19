@@ -58,7 +58,11 @@ const checkTourStatus = async (tour: ZooTour): Promise<void> => {
       (month: AvailableMonth) => !previousAvailableMonths.has(month)
     )
     if (newlyAvailableMonths.length === 0) {
-      log('No new months found', { name: tour.settings.title, newlyAvailableMonths, previousAvailableMonths })
+      log('No new months found', {
+        currentlyAvailableMonths: currentTourAvailability.availableMonths,
+        name: tour.settings.title,
+        previousAvailableMonths,
+      })
       return
     }
 
@@ -80,8 +84,6 @@ const checkTourStatus = async (tour: ZooTour): Promise<void> => {
       history: [...tour.history, currentTourAvailability],
     }
     await setZooTour(updatedTour)
-
-    log('Status check of tour complete', { name: tour.settings.title })
   } catch (error: any) {
     logError(error)
   }
@@ -90,13 +92,7 @@ const checkTourStatus = async (tour: ZooTour): Promise<void> => {
 export const zooTourCheckHandler = async (): Promise<void> => {
   try {
     const zooTours = await scanZooTours()
-    log(`Found ${zooTours.length} zoo tours`, [
-      zooTours.map((tour: ZooTour) => ({
-        history_length: tour.history.length,
-        settings: tour.settings,
-        tourId: tour.tourId,
-      })),
-    ])
+    log(`Found ${zooTours.length} zoo tours`, [zooTours.map((tour: ZooTour) => tour.tourId)])
 
     await processPromiseQueue(checkTourStatus, zooTours, { concurrency: zooStatusCheckNumberOfThreads })
   } catch (error: any) {
