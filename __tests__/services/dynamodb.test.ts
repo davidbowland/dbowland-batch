@@ -16,7 +16,7 @@ jest.mock('@utils/logging', () => ({
 describe('dynamodb', () => {
   describe('scanLambdaCleanupProjects', () => {
     beforeAll(() => {
-      mockSend.mockResolvedValueOnce({
+      mockSend.mockResolvedValue({
         Items: [{ Data: { S: JSON.stringify(lambdaCleanupProject) }, Project: { S: 'test-project' } }],
       })
     })
@@ -36,7 +36,7 @@ describe('dynamodb', () => {
 
   describe('scanZooTours', () => {
     beforeAll(() => {
-      mockSend.mockResolvedValueOnce({
+      mockSend.mockResolvedValue({
         Items: [
           {
             History: { S: JSON.stringify(mockZooTour.history) },
@@ -57,6 +57,28 @@ describe('dynamodb', () => {
         })
       )
       expect(result).toEqual([mockZooTour])
+    })
+
+    it('defaults History to an empty array when absent', async () => {
+      const expectedZooTour = { ...mockZooTour, history: [] }
+      mockSend.mockResolvedValue({
+        Items: [
+          {
+            Settings: { S: JSON.stringify(mockZooTourSettings) },
+            TourId: { S: mockZooTour.tourId },
+          },
+        ],
+      })
+
+      const result = await scanZooTours()
+
+      expect(mockSend).toHaveBeenCalledWith(
+        expect.objectContaining({
+          AttributesToGet: ['History', 'Settings', 'TourId'],
+          TableName: 'zoo-tour-test',
+        })
+      )
+      expect(result).toEqual([expectedZooTour])
     })
   })
 

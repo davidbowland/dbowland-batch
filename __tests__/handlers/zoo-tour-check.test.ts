@@ -56,6 +56,19 @@ describe('zoo-tour-check', () => {
       expect(logError).toHaveBeenCalledTimes(1)
     })
 
+    it('adds the first history entry if none exist', async () => {
+      const zooTourWithNoHistory = { ...mockZooTour, history: [] }
+      const updatedZooTour = {
+        ...mockZooTour,
+        history: [mockTourAvailability],
+      }
+      mocked(dynamodb).scanZooTours.mockResolvedValueOnce([zooTourWithNoHistory])
+
+      await zooTourCheckHandler()
+
+      expect(mocked(dynamodb).setZooTour).toHaveBeenCalledWith(updatedZooTour)
+    })
+
     it('sends a text message and updates the record when new months are found', async () => {
       const tourAvailabilityWithNewMonth = {
         ...mockTourAvailability,

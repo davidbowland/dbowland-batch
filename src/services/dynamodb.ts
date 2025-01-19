@@ -41,7 +41,7 @@ export const scanZooTours = async (): Promise<ZooTour[]> => {
   })
   const response: ScanOutput = await dynamodb.send(command)
   return response.Items?.map((item) => ({
-    history: JSON.parse(item.History.S as string),
+    history: JSON.parse(item.History?.S ?? '[]'),
     settings: JSON.parse(item.Settings.S as string),
     tourId: item.TourId.S,
   })) as ZooTour[]

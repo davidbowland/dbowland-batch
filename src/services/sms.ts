@@ -25,9 +25,7 @@ const convertContentsToJson = (to: string, contents: string): SMSMessage => ({
   to,
 })
 
+const sendRawSms = (body: SMSMessage): Promise<AxiosResponse> => api.post('/messages', body, {})
+
 export const sendSms = (to: string, contents: string): Promise<AxiosResponse> =>
-  exports.sendRawSms(convertContentsToJson(to, contents))
-
-export const sendRawSms = (body: SMSMessage): Promise<AxiosResponse> => api.post('/messages', body, {})
-
-/* Zoo tour */
+  sendRawSms(convertContentsToJson(to, contents))

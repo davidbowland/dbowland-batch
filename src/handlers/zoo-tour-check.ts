@@ -53,7 +53,9 @@ const checkTourStatus = async (tour: ZooTour): Promise<void> => {
     const currentTourAvailability = await fetchTourAvailability(tour.settings.url)
     const previousTourAvailability = tour.history[tour.history.length - 1]
 
-    const previousAvailableMonths = new Set<string>(previousTourAvailability.availableMonths)
+    const previousAvailableMonths = previousTourAvailability
+      ? new Set<string>(previousTourAvailability.availableMonths)
+      : new Set()
     const newlyAvailableMonths = currentTourAvailability.availableMonths.filter(
       (month: AvailableMonth) => !previousAvailableMonths.has(month)
     )
