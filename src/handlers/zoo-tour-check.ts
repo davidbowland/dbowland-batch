@@ -25,9 +25,7 @@ const genereateMessageContents = (
       ? ''
       : `
 
-Best available dates: ${availableDates.slice(0, 5).map(formatDateFromISO).join('; ')}
-
-Link to best available: ${availableDates[0].url}`
+Best available dates: ${availableDates.slice(0, 5).map(formatDateFromISO).join('; ')}`
 
   return `New available month found for STL zoo!!
 

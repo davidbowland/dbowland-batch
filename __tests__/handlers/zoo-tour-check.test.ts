@@ -90,9 +90,7 @@ Tour: Da bears - https://the.zoo/da-bears
 
 Months now available: 3/1/2025
 
-Best available dates: Sat, Jan 11; Fri, Jan 3; Wed, Jan 1; Wed, Jan 8; Sat, Apr 12
-
-Link to best available: https://the.zoo/book-it?date=2025-01-11`
+Best available dates: Sat, Jan 11; Fri, Jan 3; Wed, Jan 1; Wed, Jan 8; Sat, Apr 12`
       )
       expect(mocked(dynamodb).setZooTour).toHaveBeenCalledWith(updatedZooTour)
     })
