@@ -302,29 +302,8 @@ Resources:
       ScheduleExpression: 'cron(0 16,20 * 1 ? 2025)'
       State: ENABLED
       Targets:
-        - Arn: !Sub
-            - 'arn:aws:lambda:us-east-2:${AWS::AccountId}:function:${FunctionName}'
-            - FunctionName: !FindInMap [EnvironmentMap, !Ref Environment, schedulerFunction]
+        - Arn: !Sub '${ZooTourCheckLambda.Arn}'
           Id: SchedulerLambda
-          InputTransformer:
-            InputPathsMap:
-              'resources': '$.resources'
-            InputTemplate: !Sub
-              - |
-                {
-                  "resources": <resources>,
-                  "request": {
-                    "url": "https://${Domain}/v1/check-zoo-tour-status",
-                    "method": "POST",
-                    "data": { }
-                  },
-                  "apiKey": {
-                    "id": "${ApiKey}",
-                    "region": "us-east-1"
-                  }
-                }
-              - ApiKey: !Sub '${Api.ApiKey.APIKeyId}'
-                Domain: !FindInMap [EnvironmentMap, !Ref Environment, domainInternal]
 
   ZooCheckEarlyEvent:
     Type: AWS::Events::Rule
@@ -333,29 +312,8 @@ Resources:
       ScheduleExpression: 'cron(0 0-4,12-23 1-7 2 ? 2025)'
       State: ENABLED
       Targets:
-        - Arn: !Sub
-            - 'arn:aws:lambda:us-east-2:${AWS::AccountId}:function:${FunctionName}'
-            - FunctionName: !FindInMap [EnvironmentMap, !Ref Environment, schedulerFunction]
+        - Arn: !Sub '${ZooTourCheckLambda.Arn}'
           Id: SchedulerLambda
-          InputTransformer:
-            InputPathsMap:
-              'resources': '$.resources'
-            InputTemplate: !Sub
-              - |
-                {
-                  "resources": <resources>,
-                  "request": {
-                    "url": "https://${Domain}/v1/check-zoo-tour-status",
-                    "method": "POST",
-                    "data": { }
-                  },
-                  "apiKey": {
-                    "id": "${ApiKey}",
-                    "region": "us-east-1"
-                  }
-                }
-              - ApiKey: !Sub '${Api.ApiKey.APIKeyId}'
-                Domain: !FindInMap [EnvironmentMap, !Ref Environment, domainInternal]
 
   ZooCheckExpectedEvent:
     Type: AWS::Events::Rule
@@ -364,29 +322,8 @@ Resources:
       ScheduleExpression: 'cron(0-59/30 0-4,12-23 8-28 2 ? 2025)'
       State: ENABLED
       Targets:
-        - Arn: !Sub
-            - 'arn:aws:lambda:us-east-2:${AWS::AccountId}:function:${FunctionName}'
-            - FunctionName: !FindInMap [EnvironmentMap, !Ref Environment, schedulerFunction]
+        - Arn: !Sub '${ZooTourCheckLambda.Arn}'
           Id: SchedulerLambda
-          InputTransformer:
-            InputPathsMap:
-              'resources': '$.resources'
-            InputTemplate: !Sub
-              - |
-                {
-                  "resources": <resources>,
-                  "request": {
-                    "url": "https://${Domain}/v1/check-zoo-tour-status",
-                    "method": "POST",
-                    "data": { }
-                  },
-                  "apiKey": {
-                    "id": "${ApiKey}",
-                    "region": "us-east-1"
-                  }
-                }
-              - ApiKey: !Sub '${Api.ApiKey.APIKeyId}'
-                Domain: !FindInMap [EnvironmentMap, !Ref Environment, domainInternal]
 
   ZooCheckLateEvent:
     Type: AWS::Events::Rule
@@ -395,26 +332,5 @@ Resources:
       ScheduleExpression: 'cron(* 0-4/2,12-23/2 * 3-12 ? 2025)'
       State: ENABLED
       Targets:
-        - Arn: !Sub
-            - 'arn:aws:lambda:us-east-2:${AWS::AccountId}:function:${FunctionName}'
-            - FunctionName: !FindInMap [EnvironmentMap, !Ref Environment, schedulerFunction]
+        - Arn: !Sub '${ZooTourCheckLambda.Arn}'
           Id: SchedulerLambda
-          InputTransformer:
-            InputPathsMap:
-              'resources': '$.resources'
-            InputTemplate: !Sub
-              - |
-                {
-                  "resources": <resources>,
-                  "request": {
-                    "url": "https://${Domain}/v1/check-zoo-tour-status",
-                    "method": "POST",
-                    "data": { }
-                  },
-                  "apiKey": {
-                    "id": "${ApiKey}",
-                    "region": "us-east-1"
-                  }
-                }
-              - ApiKey: !Sub '${Api.ApiKey.APIKeyId}'
-                Domain: !FindInMap [EnvironmentMap, !Ref Environment, domainInternal]
