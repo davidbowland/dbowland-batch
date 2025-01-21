@@ -236,7 +236,7 @@ Resources:
       FunctionName: !Sub '${ZooTourCheckLambda.Arn}'
       Principal: events.amazonaws.com
       SourceAccount: !Ref AWS::AccountId
-      SourceArn: !Sub 'arn:aws:events::${AWS::AccountId}:rule/*'
+      SourceArn: !Sub 'arn:aws:events:${AWS::Region}:${AWS::AccountId}:rule/*'
 
   # Database
 
