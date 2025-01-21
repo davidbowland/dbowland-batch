@@ -229,6 +229,15 @@ Resources:
       FilterPattern: '[timestamp, uuid, level="ERROR", message]'
       LogGroupName: !Ref ZooTourCheckLogGroup
 
+  ZooTourLambdaInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      FunctionName: !Sub '${ZooTourCheckLambda.Arn}'
+      Principal: events.amazonaws.com
+      SourceAccount: !Ref AWS::AccountId
+      SourceArn: !Sub 'arn:aws:events::${AWS::AccountId}:rule/*'
+
   # Database
 
   LambdaCleanupTable:
