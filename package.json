@@ -4,7 +4,7 @@
   "description": "Batch processing for dbowland.com",
   "version": "1.11.0",
   "engines": {
-    "node": "^20.0.0"
+    "node": "^22.0.0"
   },
   "repository": {
     "type": "git",
@@ -41,7 +41,7 @@
     "@types/aws-lambda": "^8.10.147",
     "@types/escape-html": "^1.0.4",
     "@types/jest": "^29.5.14",
-    "@types/node": "^20.17.16",
+    "@types/node": "^22.13.8",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
     "babel-jest": "^29.7.0",

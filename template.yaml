@@ -125,7 +125,7 @@ Resources:
             BucketName: !FindInMap [EnvironmentMap, !Ref Environment, s3BucketJokes]
         - S3CrudPolicy:
             BucketName: !FindInMap [EnvironmentMap, !Ref Environment, s3BucketLinks]
-      Runtime: nodejs20.x
+      Runtime: nodejs22.x
       Tags:
         'created-by': 'dbowland-batch'
         'created-for': 'dbowland'
@@ -191,7 +191,7 @@ Resources:
         - AWSLambdaBasicExecutionRole
         - DynamoDBCrudPolicy:
             TableName: !Ref ZooTourTable
-      Runtime: nodejs20.x
+      Runtime: nodejs22.x
       Tags:
         'created-by': 'dbowland-batch'
         'created-for': 'zoo-tour'
