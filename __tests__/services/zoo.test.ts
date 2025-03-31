@@ -1,21 +1,19 @@
-import { http, HttpResponse, server } from '@setup-server'
 import { mockAvailabileMonths, mockZooBody } from '../__mocks__'
 import { fetchTourAvailability } from '@services/zoo'
 
+const mockGetEndpoint = jest.fn()
+jest.mock('axios', () => ({
+  get: (...args) => mockGetEndpoint(...args),
+}))
+jest.mock('axios-retry')
 jest.mock('@utils/logging')
 
 describe('zoo', () => {
   describe('fetchTourAvailability', () => {
-    const getEndpoint = jest.fn().mockReturnValue(mockZooBody)
     const url = 'https://the.zoo/da-bears'
 
     beforeAll(() => {
-      server.use(
-        http.get(url, async () => {
-          const body = getEndpoint()
-          return body ? HttpResponse.json(body) : new HttpResponse(null, { status: 400 })
-        })
-      )
+      mockGetEndpoint.mockReturnValue({ data: mockZooBody })
 
       jest.useFakeTimers().setSystemTime(new Date(Date.UTC(2025, 1, 15)))
     })
@@ -51,7 +49,7 @@ describe('zoo', () => {
     })
 
     it('should reject when no months exist', async () => {
-      getEndpoint.mockReturnValue('no months here')
+      mockGetEndpoint.mockReturnValueOnce({ data: 'no months here' })
 
       await expect(fetchTourAvailability(url)).rejects.toEqual(new Error('Unable to parse available dates'))
     })

@@ -1,9 +1,6 @@
 import axios from 'axios'
-import axiosRetry from 'axios-retry'
 
 import { log } from '../utils/logging'
-
-axiosRetry(axios, { retries: 3, retryDelay: axiosRetry.exponentialDelay })
 
 export interface AvailableDate {
   date: string

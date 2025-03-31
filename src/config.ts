@@ -1,3 +1,10 @@
+import axios from 'axios'
+import axiosRetry from 'axios-retry'
+
+// Axios
+
+axiosRetry(axios, { retries: 3 })
+
 // General
 
 export const s3LambdaCleanupDaysToKeep = parseInt(process.env.S3_LAMBDA_CLEANUP_DAYS_TO_KEEP as string, 10)
