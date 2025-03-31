@@ -33,6 +33,7 @@ Mappings:
       s3BucketEmails: emails-lambda
       s3BucketJokes: jokes-lambda
       s3BucketLinks: links-lambda
+      s3BucketSse: sse-lambda
       schedulerFunction: scheduler-service
       smsApiUrl: https://sms-queue-api.dbowland.com/v1
       zoneId: Z072422417XWM8PIXXSFA
@@ -53,6 +54,7 @@ Mappings:
       s3BucketEmails: emails-lambda-test
       s3BucketJokes: jokes-lambda-test
       s3BucketLinks: links-lambda-test
+      s3BucketSse: sse-lambda-test
       schedulerFunction: scheduler-service-test
       smsApiUrl: https://sms-queue-api.bowland.link/v1
       zoneId: Z01312547RGU1BYKIJXY
@@ -105,6 +107,10 @@ Resources:
             Method: post
             Auth:
               ApiKeyRequired: true
+        Scheduled:
+          Type: Schedule
+          Properties:
+            Schedule: 'cron(19 2 ? * 2 *)'
       MemorySize: 1536
       Policies:
         - AWSLambdaBasicExecutionRole
@@ -125,6 +131,8 @@ Resources:
             BucketName: !FindInMap [EnvironmentMap, !Ref Environment, s3BucketJokes]
         - S3CrudPolicy:
             BucketName: !FindInMap [EnvironmentMap, !Ref Environment, s3BucketLinks]
+        - S3CrudPolicy:
+            BucketName: !FindInMap [EnvironmentMap, !Ref Environment, s3BucketSse]
       Runtime: nodejs22.x
       Tags:
         'created-by': 'dbowland-batch'
@@ -270,36 +278,3 @@ Resources:
           Value: 'zoo-tour'
         - Key: 'environment'
           Value: !Ref Environment
-
-  # EventBridge
-
-  LambdaCleanupEvent:
-    Type: AWS::Events::Rule
-    Properties:
-      Description: Deletes unused lambda files from S3
-      ScheduleExpression: 'cron(19 2 ? * 2 *)'
-      State: ENABLED
-      Targets:
-        - Arn: !Sub
-            - 'arn:aws:lambda:us-east-2:${AWS::AccountId}:function:${FunctionName}'
-            - FunctionName: !FindInMap [EnvironmentMap, !Ref Environment, schedulerFunction]
-          Id: SchedulerLambda
-          InputTransformer:
-            InputPathsMap:
-              'resources': '$.resources'
-            InputTemplate: !Sub
-              - |
-                {
-                  "resources": <resources>,
-                  "request": {
-                    "url": "https://${Domain}/v1/s3-lambda-cleanup",
-                    "method": "POST",
-                    "data": { }
-                  },
-                  "apiKey": {
-                    "id": "${ApiKey}",
-                    "region": "us-east-1"
-                  }
-                }
-              - ApiKey: !Sub '${Api.ApiKey.APIKeyId}'
-                Domain: !FindInMap [EnvironmentMap, !Ref Environment, domainInternal]
