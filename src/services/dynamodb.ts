@@ -2,8 +2,8 @@ import { DynamoDB, PutItemCommand, PutItemCommandOutput, ScanCommand, ScanOutput
 
 import { lambdaCleanupTable, zooTourTable } from '../config'
 import { LambdaCleanupProject } from '../types'
-import { TourAvailability } from './zoo'
 import { xrayCapture } from '../utils/logging'
+import { TourAvailability } from './zoo'
 
 const dynamodb = xrayCapture(new DynamoDB({ apiVersion: '2012-08-10' }))
 

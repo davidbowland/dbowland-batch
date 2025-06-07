@@ -15,7 +15,7 @@ const parallelProcessor = async (promiseFn: PromiseFn, iterator: Iterator<any>):
 export const processPromiseQueue = async (
   promiseFn: PromiseFn,
   iterable: any[],
-  { concurrency }: ProcessPromiseQueueOptions = { concurrency: 1 }
+  { concurrency }: ProcessPromiseQueueOptions = { concurrency: 1 },
 ): Promise<void> => {
   if (concurrency < 1) throw new Error('Concurrency must be greater than 0')
   const iterator = iterable[Symbol.iterator]()

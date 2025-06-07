@@ -20,7 +20,7 @@ describe('S3', () => {
   const mockS3Client = new S3Client()
 
   describe('deleteS3Object', () => {
-    it('passes key to mock', async () => {
+    it('should pass key to mock', async () => {
       await deleteS3Object(mockS3Client, bucket, key)
 
       expect(mockSend).toHaveBeenCalledWith({
@@ -29,7 +29,7 @@ describe('S3', () => {
       })
     })
 
-    it('rejects when promise rejects', async () => {
+    it('should reject when promise rejects', async () => {
       const rejectReason = 'unable to foo the bar'
       mockSend.mockRejectedValueOnce(rejectReason)
 
@@ -58,14 +58,14 @@ describe('S3', () => {
       mockSend.mockResolvedValue(responseNoContinuation)
     })
 
-    it('returns no results when no files', async () => {
+    it('should return no results when no files', async () => {
       mockSend.mockResolvedValueOnce({})
 
       const result = await listS3Objects(mockS3Client, 'my-bucket', 'my-prefix')
       expect(result).toEqual([])
     })
 
-    it('returns non-truncated results when results are not truncated', async () => {
+    it('should return non-truncated results when results are not truncated', async () => {
       const result = await listS3Objects(mockS3Client, 'my-bucket', 'my-prefix')
       expect(result).toEqual([
         {
@@ -79,7 +79,7 @@ describe('S3', () => {
       ])
     })
 
-    it('returns all results when results are truncated', async () => {
+    it('should return all results when results are truncated', async () => {
       mockSend.mockResolvedValueOnce(responseWithContinuation)
 
       const result = await listS3Objects(mockS3Client, 'my-bucket', 'my-prefix')
@@ -103,7 +103,7 @@ describe('S3', () => {
       ])
     })
 
-    it('rejects when promise rejects', async () => {
+    it('should reject when promise rejects', async () => {
       const rejectReason = 'unable to foo the bar'
       mockSend.mockRejectedValueOnce(rejectReason)
 

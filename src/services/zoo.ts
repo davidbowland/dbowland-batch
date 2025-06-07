@@ -48,7 +48,7 @@ const findAvailableDates = (body: string): AvailableDate[] =>
 const findAvailableMonths = (body: string): AvailableMonth[] => {
   const selectHtml = body.match(/<select [^>]+>.+Jump to Month<\/option>(.*?)<\/select>/s)?.[1] ?? ''
   const availableMonths = Array.from(selectHtml.matchAll(/<option value="([^"]+)">[^<]*<\/option>/g)).map(
-    (match) => match[1]
+    (match) => match[1],
   )
   if (availableMonths.length === 0) {
     log('Unable to parse available dates', { availableMonths, selectHtml })

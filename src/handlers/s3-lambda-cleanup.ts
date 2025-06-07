@@ -1,9 +1,9 @@
+import { s3LambdaCleanupDaysToKeep, s3LambdaCleanupNumberOfThreads } from '../config'
+import { scanLambdaCleanupProjects } from '../services/dynamodb'
 import { deleteS3Object, listS3Objects, s3ClientEast1, s3ClientEast2 } from '../services/s3'
 import { LambdaObjectsToDelete, LambdaRegion, OldestLambdaFileTracker, S3Client, S3Object } from '../types'
-import { s3LambdaCleanupDaysToKeep, s3LambdaCleanupNumberOfThreads } from '../config'
 import { log } from '../utils/logging'
 import { processPromiseQueue } from '../utils/parallel'
-import { scanLambdaCleanupProjects } from '../services/dynamodb'
 
 /* S3 object processing */
 
@@ -33,7 +33,7 @@ const findObjectsToDelete = (s3Objects: S3Object[]): LambdaObjectsToDelete => {
   const cutoffDate = new Date(
     currentDate.getUTCFullYear(),
     currentDate.getUTCMonth(),
-    currentDate.getUTCDate() - s3LambdaCleanupDaysToKeep
+    currentDate.getUTCDate() - s3LambdaCleanupDaysToKeep,
   )
   const oldestFileTracker = s3Objects.reduce(secondOldestReducer, { cutoffDate } as OldestLambdaFileTracker)
   if (oldestFileTracker.secondOldestTime === undefined) return { objectsToDelete: [] }
@@ -69,7 +69,7 @@ const getS3ClientByRegion = (region: LambdaRegion): S3Client => {
 export const s3LambdaCleanupHandler = async () => {
   const cleanupProjects = await scanLambdaCleanupProjects()
   const flattenedCleanupProjects = cleanupProjects.flatMap((project) =>
-    project.prefixes.map((prefix: string) => ({ ...project, prefix }))
+    project.prefixes.map((prefix: string) => ({ ...project, prefix })),
   )
   const promiseFn = ({ bucket, prefix, region }: (typeof flattenedCleanupProjects)[0]) =>
     cleanUpPrefix(getS3ClientByRegion(region), bucket, prefix)

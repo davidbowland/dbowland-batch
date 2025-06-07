@@ -21,14 +21,14 @@ describe('dynamodb', () => {
       })
     })
 
-    it('calls DynamoDB with the correct arguments', async () => {
+    it('should call DynamoDB with the correct arguments', async () => {
       const result = await scanLambdaCleanupProjects()
 
       expect(mockSend).toHaveBeenCalledWith(
         expect.objectContaining({
           AttributesToGet: ['Data', 'Project'],
           TableName: 's3-lambda-cleanup-test',
-        })
+        }),
       )
       expect(result).toEqual([lambdaCleanupProject])
     })
@@ -47,19 +47,19 @@ describe('dynamodb', () => {
       })
     })
 
-    it('calls DynamoDB with the correct arguments', async () => {
+    it('should call DynamoDB with the correct arguments', async () => {
       const result = await scanZooTours()
 
       expect(mockSend).toHaveBeenCalledWith(
         expect.objectContaining({
           AttributesToGet: ['History', 'Settings', 'TourId'],
           TableName: 'zoo-tour-test',
-        })
+        }),
       )
       expect(result).toEqual([mockZooTour])
     })
 
-    it('defaults History to an empty array when absent', async () => {
+    it('should default History to an empty array when absent', async () => {
       const expectedZooTour = { ...mockZooTour, history: [] }
       mockSend.mockResolvedValue({
         Items: [
@@ -76,14 +76,14 @@ describe('dynamodb', () => {
         expect.objectContaining({
           AttributesToGet: ['History', 'Settings', 'TourId'],
           TableName: 'zoo-tour-test',
-        })
+        }),
       )
       expect(result).toEqual([expectedZooTour])
     })
   })
 
   describe('setZooTour', () => {
-    it('calls DynamoDB with the correct arguments', async () => {
+    it('should call DynamoDB with the correct arguments', async () => {
       await setZooTour(mockZooTour)
 
       expect(mockSend).toHaveBeenCalledWith(
@@ -94,7 +94,7 @@ describe('dynamodb', () => {
             TourId: { S: mockZooTour.tourId },
           },
           TableName: 'zoo-tour-test',
-        })
+        }),
       )
     })
   })

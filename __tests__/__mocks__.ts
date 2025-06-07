@@ -1,6 +1,6 @@
+import { ZooTour, ZooTourSettings } from '@services/dynamodb'
 import { AvailableDate, AvailableMonth, TourAvailability } from '@services/zoo'
 import { LambdaCleanupProject, S3Object } from '@types'
-import { ZooTour, ZooTourSettings } from '@services/dynamodb'
 
 /* Lambda cleanup project */
 

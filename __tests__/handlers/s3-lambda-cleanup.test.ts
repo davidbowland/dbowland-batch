@@ -1,7 +1,5 @@
 import { mocked } from 'jest-mock'
 
-import * as s3 from '@services/s3'
-import { LambdaCleanupProject, LambdaRegion, S3Client } from '@types'
 import {
   lambdaCleanupProject,
   s3MockTime,
@@ -11,10 +9,12 @@ import {
   s3ObjectTooNew,
   s3ObjectTooNewTwo,
 } from '../__mocks__'
-import { processPromiseQueue } from '@utils/parallel'
-import { s3LambdaCleanupHandler } from '@handlers/s3-lambda-cleanup'
 import { s3LambdaCleanupNumberOfThreads } from '@config'
+import { s3LambdaCleanupHandler } from '@handlers/s3-lambda-cleanup'
 import { scanLambdaCleanupProjects } from '@services/dynamodb'
+import * as s3 from '@services/s3'
+import { LambdaCleanupProject, LambdaRegion, S3Client } from '@types'
+import { processPromiseQueue } from '@utils/parallel'
 
 jest.mock('@services/dynamodb')
 jest.mock('@services/s3')
@@ -44,14 +44,14 @@ describe('s3-lambda-cleanup', () => {
       expect(s3.listS3Objects).toHaveBeenCalledWith(
         s3.s3ClientEast1,
         lambdaCleanupProject.bucket,
-        lambdaCleanupProject.prefixes[0]
+        lambdaCleanupProject.prefixes[0],
       )
       expect(s3.listS3Objects).toHaveBeenCalledTimes(1)
       expect(s3.deleteS3Object).toHaveBeenCalledWith(s3.s3ClientEast1, lambdaCleanupProject.bucket, s3ObjectOlder.key)
       expect(s3.deleteS3Object).toHaveBeenCalledWith(
         s3.s3ClientEast1,
         lambdaCleanupProject.bucket,
-        s3ObjectEvenOlder.key
+        s3ObjectEvenOlder.key,
       )
       expect(s3.deleteS3Object).toHaveBeenCalledTimes(2)
       expect(processPromiseQueue).toHaveBeenCalledWith(expect.anything(), expect.anything(), {
@@ -78,7 +78,7 @@ describe('s3-lambda-cleanup', () => {
       expect(s3.deleteS3Object).toHaveBeenCalledWith(
         s3.s3ClientEast2,
         lambdaCleanupProject.bucket,
-        s3ObjectEvenOlder.key
+        s3ObjectEvenOlder.key,
       )
       expect(s3.deleteS3Object).toHaveBeenCalledTimes(2)
     })

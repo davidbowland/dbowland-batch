@@ -1,12 +1,12 @@
 import { mocked } from 'jest-mock'
 
+import { mockAvailabileMonths, mockTourAvailability, mockZooTour } from '../__mocks__'
+import { zooTourCheckHandler } from '@handlers/zoo-tour-check'
 import * as dynamodb from '@services/dynamodb'
 import * as sms from '@services/sms'
 import * as zoo from '@services/zoo'
-import { mockAvailabileMonths, mockTourAvailability, mockZooTour } from '../__mocks__'
 import { logError } from '@utils/logging'
 import { processPromiseQueue } from '@utils/parallel'
-import { zooTourCheckHandler } from '@handlers/zoo-tour-check'
 
 jest.mock('@services/dynamodb')
 jest.mock('@services/sms')
@@ -90,12 +90,12 @@ Tour: Da bears - https://the.zoo/da-bears
 
 Months now available: 3/1/2025
 
-Best available dates: Sat, Jan 11; Fri, Jan 3; Wed, Jan 1; Wed, Jan 8; Sat, Apr 12`
+Best available dates: Sat, Jan 11; Fri, Jan 3; Wed, Jan 1; Wed, Jan 8; Sat, Apr 12`,
       )
       expect(mocked(dynamodb).setZooTour).toHaveBeenCalledWith(updatedZooTour)
     })
 
-    it('sends a different message when no dates are avaialable', async () => {
+    it('should send a different message when no dates are available', async () => {
       const tourAvailabilityWithNoDates = {
         ...mockTourAvailability,
         availableDates: [],
@@ -115,7 +115,7 @@ Best available dates: Sat, Jan 11; Fri, Jan 3; Wed, Jan 1; Wed, Jan 8; Sat, Apr 
 
 Tour: Da bears - https://the.zoo/da-bears
 
-Months now available: 3/1/2025`
+Months now available: 3/1/2025`,
       )
       expect(mocked(dynamodb).setZooTour).toHaveBeenCalledWith(updatedZooTour)
     })

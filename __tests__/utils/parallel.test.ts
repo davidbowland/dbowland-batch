@@ -11,29 +11,29 @@ describe('processPromiseQueue', () => {
         setTimeout(() => {
           results.push(result)
           resolve(result)
-        }, timeout)
+        }, timeout),
       )
     return { promiseFn, results }
   }
 
-  it('processes promises sequentially when concurrency is 1', async () => {
+  it('should process promises sequentially when concurrency is 1', async () => {
     const { promiseFn, results } = usePromiseFn()
     await processPromiseQueue(promiseFn, [longPromise, shortPromise])
 
     expect(results).toEqual(['longPromise', 'shortPromise'])
   })
 
-  it('processes promises concurrently when concurrency > 1', async () => {
+  it('should process promises concurrently when concurrency > 1', async () => {
     const { promiseFn, results } = usePromiseFn()
     await processPromiseQueue(promiseFn, [longPromise, shortPromise], { concurrency: 2 })
 
     expect(results).toEqual(['shortPromise', 'longPromise'])
   })
 
-  it('errors if concurrency is < 1', async () => {
+  it('should throw an error if concurrency is < 1', async () => {
     const { promiseFn } = usePromiseFn()
     await expect(processPromiseQueue(promiseFn, [], { concurrency: 0 })).rejects.toThrow(
-      'Concurrency must be greater than 0'
+      'Concurrency must be greater than 0',
     )
   })
 })

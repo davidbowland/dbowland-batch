@@ -15,7 +15,7 @@ export const listS3Objects = async (
   s3Client: S3Client,
   bucket: string,
   prefix: string,
-  continuationToken?: string
+  continuationToken?: string,
 ): Promise<S3Object[]> => {
   const command = new ListObjectsV2Command({
     Bucket: bucket,

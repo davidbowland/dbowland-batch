@@ -1,8 +1,9 @@
+import { S3 } from '@aws-sdk/client-s3'
 import * as AWSXRay from 'aws-xray-sdk-core'
-import { log, logError, xrayCapture, xrayCaptureHttps } from '@utils/logging'
 import https from 'https'
 import { mocked } from 'jest-mock'
-import { S3 } from '@aws-sdk/client-s3'
+
+import { log, logError, xrayCapture, xrayCaptureHttps } from '@utils/logging'
 
 jest.mock('aws-xray-sdk-core')
 
@@ -39,7 +40,7 @@ describe('logging', () => {
       mocked(AWSXRay).captureAWSv3Client.mockReturnValue(capturedS3)
     })
 
-    it('returns AWSXRay.captureAWSv3Client when x-ray is enabled (not running locally)', () => {
+    it('should return AWSXRay.captureAWSv3Client when x-ray is enabled', () => {
       process.env.AWS_SAM_LOCAL = 'false'
       const result = xrayCapture(s3)
 
@@ -47,7 +48,7 @@ describe('logging', () => {
       expect(result).toEqual(capturedS3)
     })
 
-    it('returns same object when x-ray is disabled (running locally)', () => {
+    it('should return same object when x-ray is disabled', () => {
       process.env.AWS_SAM_LOCAL = 'true'
       const result = xrayCapture(s3)
 
@@ -57,14 +58,14 @@ describe('logging', () => {
   })
 
   describe('xrayCaptureHttps', () => {
-    it('returns AWSXRay.captureHTTPsGlobal when x-ray is enabled (not running locally)', () => {
+    it('should call AWSXRay.captureHTTPsGlobal when x-ray is enabled', () => {
       process.env.AWS_SAM_LOCAL = 'false'
       xrayCaptureHttps()
 
       expect(mocked(AWSXRay).captureHTTPsGlobal).toHaveBeenCalledWith(https)
     })
 
-    it('returns same object when x-ray is disabled (running locally)', () => {
+    it('should not call AWSXRay.captureHTTPsGlobal when x-ray is disabled', () => {
       process.env.AWS_SAM_LOCAL = 'true'
       xrayCaptureHttps()
 

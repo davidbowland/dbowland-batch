@@ -17,7 +17,7 @@ describe('sms', () => {
     const to = '+1800JENNYCRAIG'
     const contents = 'Hello, Goodbye!'
 
-    it('pass sms contents to the endpoint', async () => {
+    it('should pass sms contents to the endpoint', async () => {
       await sendSms(to, contents)
       expect(mockPostEndpoint).toHaveBeenCalledWith(
         `${smsApiUrl}/messages`,
@@ -26,7 +26,7 @@ describe('sms', () => {
           messageType: 'TRANSACTIONAL',
           to,
         },
-        { 'x-api-key': smsApiKey }
+        { 'x-api-key': smsApiKey },
       )
     })
   })

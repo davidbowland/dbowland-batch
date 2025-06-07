@@ -1,9 +1,9 @@
+import { zooSmsNumberOfThreads, zooStatusCheckNumberOfThreads } from '../config'
+import { scanZooTours, setZooTour, ZooTour, ZooTourSettings } from '../services/dynamodb'
+import { sendSms } from '../services/sms'
 import { AvailableDate, AvailableMonth, fetchTourAvailability } from '../services/zoo'
 import { log, logError } from '../utils/logging'
-import { scanZooTours, setZooTour, ZooTour, ZooTourSettings } from '../services/dynamodb'
-import { zooSmsNumberOfThreads, zooStatusCheckNumberOfThreads } from '../config'
 import { processPromiseQueue } from '../utils/parallel'
-import { sendSms } from '../services/sms'
 
 /* SMS */
 
@@ -18,7 +18,7 @@ const formatDateFromISO = (availableDate: AvailableDate) =>
 const generateMessageContents = (
   availableDates: AvailableDate[],
   availableMonths: AvailableMonth[],
-  settings: ZooTourSettings
+  settings: ZooTourSettings,
 ) => {
   const availableDatesString =
     availableDates.length === 0
@@ -55,7 +55,7 @@ const checkTourStatus = async (tour: ZooTour): Promise<void> => {
       ? new Set<string>(previousTourAvailability.availableMonths)
       : new Set()
     const newlyAvailableMonths = currentTourAvailability.availableMonths.filter(
-      (month: AvailableMonth) => !previousAvailableMonths.has(month)
+      (month: AvailableMonth) => !previousAvailableMonths.has(month),
     )
     if (newlyAvailableMonths.length === 0) {
       log('No new months found', {
@@ -69,13 +69,13 @@ const checkTourStatus = async (tour: ZooTour): Promise<void> => {
     const textMessageContents = generateMessageContents(
       currentTourAvailability.availableDates,
       newlyAvailableMonths,
-      tour.settings
+      tour.settings,
     )
     log('Sending SMS messages', { phone_numbers: tour.settings.phone_numbers, textMessageContents })
     await processPromiseQueue(
       (phoneNumber: string) => sendSms(phoneNumber, textMessageContents),
       tour.settings.phone_numbers,
-      { concurrency: zooSmsNumberOfThreads }
+      { concurrency: zooSmsNumberOfThreads },
     )
 
     log('Updating tour history', { name: tour.settings.title })
