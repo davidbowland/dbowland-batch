@@ -7,11 +7,6 @@ if [[ -z "$1" ]]; then
   $(./scripts/assumeDeveloperRole.sh)
 fi
 
-if [[ -z "$PHONE_NUMBER" ]]; then
-  echo "Variable PHONE_NUMBER not defined"
-  exit 1
-fi
-
 # Only install production modules
 export HUSKY=0
 export NODE_ENV=production

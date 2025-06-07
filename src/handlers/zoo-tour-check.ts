@@ -15,7 +15,7 @@ const formatDateFromISO = (availableDate: AvailableDate) =>
     weekday: 'short',
   })
 
-const genereateMessageContents = (
+const generateMessageContents = (
   availableDates: AvailableDate[],
   availableMonths: AvailableMonth[],
   settings: ZooTourSettings
@@ -66,7 +66,7 @@ const checkTourStatus = async (tour: ZooTour): Promise<void> => {
       return
     }
 
-    const textMessageContents = genereateMessageContents(
+    const textMessageContents = generateMessageContents(
       currentTourAvailability.availableDates,
       newlyAvailableMonths,
       tour.settings

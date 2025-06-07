@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: >-
-  Subscriber for error logs
+  Batch processing for dbowland.com
 
 Transform:
   - AWS::Serverless-2016-10-31
