@@ -32,7 +32,6 @@ Mappings:
       s3BucketDbowlandEast2: dbowland-lambda-east-2
       s3BucketEmails: emails-lambda
       s3BucketJokes: jokes-lambda
-      s3BucketLinks: links-lambda
       s3BucketSse: sse-lambda
       schedulerFunction: scheduler-service
       smsApiUrl: https://sms-queue-api.dbowland.com/v1
@@ -53,7 +52,6 @@ Mappings:
       s3BucketDbowlandEast2: dbowland-lambda-east-2-test
       s3BucketEmails: emails-lambda-test
       s3BucketJokes: jokes-lambda-test
-      s3BucketLinks: links-lambda-test
       s3BucketSse: sse-lambda-test
       schedulerFunction: scheduler-service-test
       smsApiUrl: https://sms-queue-api.bowland.link/v1
@@ -129,8 +127,6 @@ Resources:
             BucketName: !FindInMap [EnvironmentMap, !Ref Environment, s3BucketEmails]
         - S3CrudPolicy:
             BucketName: !FindInMap [EnvironmentMap, !Ref Environment, s3BucketJokes]
-        - S3CrudPolicy:
-            BucketName: !FindInMap [EnvironmentMap, !Ref Environment, s3BucketLinks]
         - S3CrudPolicy:
             BucketName: !FindInMap [EnvironmentMap, !Ref Environment, s3BucketSse]
       Runtime: nodejs22.x
