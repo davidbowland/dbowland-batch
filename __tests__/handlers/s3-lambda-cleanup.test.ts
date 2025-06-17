@@ -1,5 +1,3 @@
-import { mocked } from 'jest-mock'
-
 import {
   lambdaCleanupProject,
   s3MockTime,
@@ -23,15 +21,15 @@ jest.mock('@utils/parallel')
 
 describe('s3-lambda-cleanup', () => {
   beforeAll(() => {
-    mocked(s3).deleteS3Object.mockResolvedValue(undefined)
-    mocked(s3).listS3Objects.mockResolvedValue([s3Object, s3ObjectOlder, s3ObjectEvenOlder])
+    jest.mocked(s3).deleteS3Object.mockResolvedValue(undefined)
+    jest.mocked(s3).listS3Objects.mockResolvedValue([s3Object, s3ObjectOlder, s3ObjectEvenOlder])
     jest.replaceProperty(s3, 's3ClientEast1', jest.fn() as unknown as S3Client)
     jest.replaceProperty(s3, 's3ClientEast2', jest.fn() as unknown as S3Client)
 
-    mocked(processPromiseQueue).mockImplementation(async (promiseFn, iterable) => {
+    jest.mocked(processPromiseQueue).mockImplementation(async (promiseFn, iterable) => {
       await Promise.all(iterable.map(promiseFn))
     })
-    mocked(scanLambdaCleanupProjects).mockResolvedValue([lambdaCleanupProject])
+    jest.mocked(scanLambdaCleanupProjects).mockResolvedValue([lambdaCleanupProject])
 
     jest.useFakeTimers().setSystemTime(s3MockTime)
   })
@@ -65,9 +63,9 @@ describe('s3-lambda-cleanup', () => {
         prefixes: ['lambda-one/', 'lambda-two/'],
         region: 'us-east-2',
       }
-      mocked(scanLambdaCleanupProjects).mockResolvedValueOnce([usEast2Project])
-      mocked(s3).listS3Objects.mockResolvedValueOnce([s3Object, s3ObjectEvenOlder, s3ObjectOlder])
-      mocked(s3).listS3Objects.mockResolvedValueOnce([])
+      jest.mocked(scanLambdaCleanupProjects).mockResolvedValueOnce([usEast2Project])
+      jest.mocked(s3).listS3Objects.mockResolvedValueOnce([s3Object, s3ObjectEvenOlder, s3ObjectOlder])
+      jest.mocked(s3).listS3Objects.mockResolvedValueOnce([])
       await s3LambdaCleanupHandler()
 
       expect(scanLambdaCleanupProjects).toHaveBeenCalledTimes(1)
@@ -88,14 +86,14 @@ describe('s3-lambda-cleanup', () => {
         ...lambdaCleanupProject,
         region: 'invalid-region' as LambdaRegion,
       }
-      mocked(scanLambdaCleanupProjects).mockResolvedValueOnce([invalidRegionProject])
+      jest.mocked(scanLambdaCleanupProjects).mockResolvedValueOnce([invalidRegionProject])
 
       await expect(s3LambdaCleanupHandler()).rejects.toThrow('Invalid region: invalid-region')
     })
 
     it('deletes no files when no second-oldest template files exist', async () => {
       const secondOldestNotTemplate = { ...s3ObjectEvenOlder, key: 'test-not-template' }
-      mocked(s3).listS3Objects.mockResolvedValueOnce([s3Object, secondOldestNotTemplate])
+      jest.mocked(s3).listS3Objects.mockResolvedValueOnce([s3Object, secondOldestNotTemplate])
       await s3LambdaCleanupHandler()
 
       expect(s3.listS3Objects).toHaveBeenCalledTimes(1)
@@ -103,7 +101,7 @@ describe('s3-lambda-cleanup', () => {
     })
 
     it('deletes no files when all files within cutoff time', async () => {
-      mocked(s3).listS3Objects.mockResolvedValueOnce([s3ObjectTooNew, s3ObjectTooNewTwo])
+      jest.mocked(s3).listS3Objects.mockResolvedValueOnce([s3ObjectTooNew, s3ObjectTooNewTwo])
       await s3LambdaCleanupHandler()
 
       expect(s3.listS3Objects).toHaveBeenCalledTimes(1)
@@ -111,7 +109,7 @@ describe('s3-lambda-cleanup', () => {
     })
 
     it('does not delete second-oldest file when newest file is within cutoff', async () => {
-      mocked(s3).listS3Objects.mockResolvedValueOnce([s3Object, s3ObjectTooNew])
+      jest.mocked(s3).listS3Objects.mockResolvedValueOnce([s3Object, s3ObjectTooNew])
       await s3LambdaCleanupHandler()
 
       expect(s3.listS3Objects).toHaveBeenCalledTimes(1)
