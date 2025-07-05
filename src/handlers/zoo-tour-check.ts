@@ -84,7 +84,7 @@ const checkTourStatus = async (tour: ZooTour): Promise<void> => {
       history: [...tour.history, currentTourAvailability],
     }
     await setZooTour(updatedTour)
-  } catch (error: any) {
+  } catch (error: unknown) {
     logError(error)
   }
 }
@@ -95,7 +95,7 @@ export const zooTourCheckHandler = async (): Promise<void> => {
     log(`Found ${zooTours.length} zoo tours`, [zooTours.map((tour: ZooTour) => tour.tourId)])
 
     await processPromiseQueue(checkTourStatus, zooTours, { concurrency: zooStatusCheckNumberOfThreads })
-  } catch (error: any) {
+  } catch (error: unknown) {
     logError(error)
   }
 }
