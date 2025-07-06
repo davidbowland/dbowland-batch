@@ -27,7 +27,6 @@ Mappings:
       logStreamFunction: log-subscriber
       project: dbowland-batch-subscriber
       s3BucketChoosee: choosee-lambda
-      s3BucketDbdBuildMaker: dbd-build-maker-lambda
       s3BucketDbowlandEast1: dbowland-lambda-east-1
       s3BucketDbowlandEast2: dbowland-lambda-east-2
       s3BucketEmails: emails-lambda
@@ -47,7 +46,6 @@ Mappings:
       logStreamFunction: log-subscriber-test
       project: dbowland-batch-test
       s3BucketChoosee: choosee-lambda-test
-      s3BucketDbdBuildMaker: dbd-build-maker-lambda-test
       s3BucketDbowlandEast1: dbowland-lambda-east-1-test
       s3BucketDbowlandEast2: dbowland-lambda-east-2-test
       s3BucketEmails: emails-lambda-test
@@ -117,8 +115,6 @@ Resources:
         # Buckets of projects managed by this lambda
         - S3CrudPolicy:
             BucketName: !FindInMap [EnvironmentMap, !Ref Environment, s3BucketChoosee]
-        - S3CrudPolicy:
-            BucketName: !FindInMap [EnvironmentMap, !Ref Environment, s3BucketDbdBuildMaker]
         - S3CrudPolicy:
             BucketName: !FindInMap [EnvironmentMap, !Ref Environment, s3BucketDbowlandEast1]
         - S3CrudPolicy:
