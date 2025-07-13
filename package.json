@@ -25,13 +25,13 @@
     "update": "ncu --doctor --target minor --upgrade && npm audit fix --audit-level=none && npm run test && npm dedupe"
   },
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "^3.840.0",
-    "@aws-sdk/client-s3": "^3.842.0",
+    "@aws-sdk/client-dynamodb": "^3.844.0",
+    "@aws-sdk/client-s3": "^3.844.0",
     "aws-xray-sdk-core": "^3.10.3",
     "axios": "^1.10.0",
     "axios-retry": "^4.5.0",
-    "core-js": "^3.43.0",
-    "esbuild": "^0.25.5",
+    "core-js": "^3.44.0",
+    "esbuild": "^0.25.6",
     "husky": "^9.1.7"
   },
   "devDependencies": {
@@ -42,7 +42,7 @@
     "@types/aws-lambda": "^8.10.150",
     "@types/escape-html": "^1.0.4",
     "@types/jest": "^29.5.14",
-    "@types/node": "^22.16.0",
+    "@types/node": "^22.16.3",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
     "babel-jest": "^29.7.0",
