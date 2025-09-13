@@ -2,7 +2,7 @@
   "name": "dbowland-batch",
   "author": "David Bowland",
   "description": "Batch processing for dbowland.com",
-  "version": "1.16.0",
+  "version": "1.17.0",
   "engines": {
     "node": "^22.0.0"
   },
