@@ -129,7 +129,7 @@ Resources:
             BucketName: !FindInMap [EnvironmentMap, !Ref Environment, s3BucketJokes]
         - S3CrudPolicy:
             BucketName: !FindInMap [EnvironmentMap, !Ref Environment, s3BucketSse]
-      Runtime: nodejs22.x
+      Runtime: nodejs24.x
       Tags:
         'created-by': 'dbowland-batch'
         'created-for': 'dbowland'
@@ -140,7 +140,7 @@ Resources:
       BuildMethod: esbuild
       BuildProperties:
         Minify: true
-        Target: 'es2023'
+        Target: 'es2024'
         Sourcemap: true
         EntryPoints:
           - src/handlers/s3-lambda-cleanup.ts
@@ -195,7 +195,7 @@ Resources:
         - AWSLambdaBasicExecutionRole
         - DynamoDBCrudPolicy:
             TableName: !Ref ZooTourTable
-      Runtime: nodejs22.x
+      Runtime: nodejs24.x
       Tags:
         'created-by': 'dbowland-batch'
         'created-for': 'zoo-tour'
@@ -206,7 +206,7 @@ Resources:
       BuildMethod: esbuild
       BuildProperties:
         Minify: true
-        Target: 'es2023'
+        Target: 'es2024'
         Sourcemap: true
         EntryPoints:
           - src/handlers/zoo-tour-check.ts
