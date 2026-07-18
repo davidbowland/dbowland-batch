@@ -16,6 +16,7 @@ Parameters:
   SmsApiKey:
     Type: String
     Description: API key for sms-queue-api
+    NoEcho: true
 
 Mappings:
   EnvironmentMap:
