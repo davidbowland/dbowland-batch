@@ -1,6 +1,13 @@
 # dbowland.com Batch Processing
 
-Lambda batch processing for cleaning up resources for dbowland.com
+Lambda batch processing for dbowland.com. Two functions are deployed:
+
+- **S3 lambda cleanup** — scheduled cleanup of stale objects across the fleet's Lambda
+  source buckets (choosee, connections, emails, jokes, sse, dbowland), also invokable
+  via `POST /s3-lambda-cleanup`.
+- **Zoo tour check** — checks zoo tour availability and sends an SMS via
+  `sms-queue-api` when a slot opens up, invoked via `POST /check-zoo-tour-status`
+  (scheduled externally via EventBridge, e.g. by `scheduler-service`).
 
 ## Setup
 
@@ -68,7 +75,7 @@ npm run lint
 
 ### Deploying to Production
 
-When a pull request is merged into `master`, the lambda code is transpiled to commonjs and then deployed. Feature branches are also deployed but are given unique resources.
+Deploys run via GitHub Actions (`.github/workflows/pipeline.yaml`). The lambda code is bundled with esbuild via `sam build`, then packaged and deployed with AWS SAM. When a pull request is merged into `master`, the build is promoted from the test stack (`dbowland-batch-test`) to production (`dbowland-batch`). Feature branches also deploy, but to the same shared `dbowland-batch-test` stack — they do not get unique resources, so concurrent feature branches can overwrite each other's test deployment.
 
 ## Additional Documentation
 

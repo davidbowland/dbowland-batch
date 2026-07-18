@@ -1,6 +1,7 @@
 {
   "name": "dbowland-batch",
   "author": "David Bowland",
+  "license": "SEE LICENSE IN LICENSE",
   "description": "Batch processing for dbowland.com",
   "version": "1.18.0",
   "engines": {
