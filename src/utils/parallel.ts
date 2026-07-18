@@ -4,7 +4,6 @@ export interface ProcessPromiseQueueOptions {
 export type PromiseFn<T> = (value: T) => Promise<unknown>
 
 const parallelProcessor = async <T>(promiseFn: PromiseFn<T>, iterator: Iterator<T>): Promise<void> => {
-  /* eslint-disable-next-line no-constant-condition */
   while (true) {
     const { done, value } = iterator.next()
     if (done) break

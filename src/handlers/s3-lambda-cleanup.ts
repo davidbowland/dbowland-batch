@@ -55,12 +55,12 @@ const cleanUpPrefix = async (s3Client: S3Client, bucket: string, prefix: string)
 
 const getS3ClientByRegion = (region: LambdaRegion): S3Client => {
   switch (region) {
-  case 'us-east-1':
-    return s3ClientEast1
-  case 'us-east-2':
-    return s3ClientEast2
-  default:
-    throw new Error(`Invalid region: ${region}`)
+    case 'us-east-1':
+      return s3ClientEast1
+    case 'us-east-2':
+      return s3ClientEast2
+    default:
+      throw new Error(`Invalid region: ${region}`)
   }
 }
 
