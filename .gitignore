@@ -5,7 +5,6 @@
 node_modules/
 dist/
 coverage/
-public/
 
 # Compiled Java class files
 *.class

@@ -87,7 +87,6 @@ export default {
   // A map from regular expressions to module names or to arrays of module names that allow to stub out resources with a single module
   moduleNameMapper: {
     '^@config$': '<rootDir>/src/config',
-    '^@events/(.*)$': '<rootDir>/events/$1',
     '^@handlers/(.*)$': '<rootDir>/src/handlers/$1',
     '^@services/(.*)$': '<rootDir>/src/services/$1',
     '^@types$': '<rootDir>/src/types',
