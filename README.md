@@ -1,13 +1,10 @@
 # dbowland.com Batch Processing
 
-Lambda batch processing for dbowland.com. Two functions are deployed:
+Lambda batch processing for dbowland.com. One function is deployed:
 
 - **S3 lambda cleanup** — scheduled cleanup of stale objects across the fleet's Lambda
   source buckets (choosee, connections, emails, jokes, sse, dbowland), also invokable
   via `POST /s3-lambda-cleanup`.
-- **Zoo tour check** — checks zoo tour availability and sends an SMS via
-  `sms-queue-api` when a slot opens up, invoked via `POST /check-zoo-tour-status`
-  (scheduled externally via EventBridge, e.g. by `scheduler-service`).
 
 ## Setup
 

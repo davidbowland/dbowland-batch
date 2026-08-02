@@ -13,10 +13,6 @@ Parameters:
       - prod
       - test
     Description: Environment for deploy
-  SmsApiKey:
-    Type: String
-    Description: API key for sms-queue-api
-    NoEcho: true
 
 Mappings:
   EnvironmentMap:
@@ -35,11 +31,7 @@ Mappings:
       s3BucketJokes: jokes-lambda
       s3BucketSse: sse-lambda
       schedulerFunction: scheduler-service
-      smsApiUrl: https://sms-queue-api.dbowland.com/v1
       zoneId: Z072422417XWM8PIXXSFA
-      zooTourSmsNumberOfThreads: 2
-      zooTourStatusNumberOfThreads: 5
-      zooTourTable: dbowland-batch-zoo-tour
     test:
       certificate: 6a48cba7-feb9-4de5-8cbf-d383140fcdef
       domainInternal: dbowland-batch-internal.bowland.link
@@ -55,11 +47,7 @@ Mappings:
       s3BucketJokes: jokes-lambda-test
       s3BucketSse: sse-lambda-test
       schedulerFunction: scheduler-service-test
-      smsApiUrl: https://sms-queue-api.bowland.link/v1
       zoneId: Z01312547RGU1BYKIJXY
-      zooTourSmsNumberOfThreads: 2
-      zooTourStatusNumberOfThreads: 2
-      zooTourTable: dbowland-batch-zoo-tour-test
 
 Resources:
   Api:
@@ -168,81 +156,6 @@ Resources:
       FilterPattern: '[timestamp, uuid, level="ERROR", message]'
       LogGroupName: !Ref LambdaS3CleanupLogGroup
 
-  ZooTourCheckLambda:
-    Type: AWS::Serverless::Function
-    Properties:
-      Description: Check for new St Louis Zoo tours
-      Architectures:
-        - x86_64
-      Handler: src/handlers/zoo-tour-check.zooTourCheckHandler
-      Environment:
-        Variables:
-          SMS_API_KEY: !Ref SmsApiKey
-          SMS_API_URL: !FindInMap [EnvironmentMap, !Ref Environment, smsApiUrl]
-          ZOO_TOUR_SMS_NUMBER_OF_THREADS: !FindInMap [EnvironmentMap, !Ref Environment, zooTourSmsNumberOfThreads]
-          ZOO_TOUR_STATUS_NUMBER_OF_THREADS: !FindInMap [EnvironmentMap, !Ref Environment, zooTourStatusNumberOfThreads]
-          ZOO_TOUR_TABLE: !FindInMap [EnvironmentMap, !Ref Environment, zooTourTable]
-      Events:
-        ApiKey:
-          Type: Api
-          Properties:
-            RestApiId: !Ref Api
-            Path: /check-zoo-tour-status
-            Method: post
-            Auth:
-              ApiKeyRequired: true
-      MemorySize: 1536
-      Policies:
-        - AWSLambdaBasicExecutionRole
-        - DynamoDBCrudPolicy:
-            TableName: !Ref ZooTourTable
-      Runtime: nodejs24.x
-      Tags:
-        'created-by': 'dbowland-batch'
-        'created-for': 'zoo-tour'
-        'environment': !Ref Environment
-      Timeout: 300
-      Tracing: Active
-    Metadata:
-      BuildMethod: esbuild
-      BuildProperties:
-        Minify: true
-        Target: 'es2024'
-        Sourcemap: true
-        EntryPoints:
-          - src/handlers/zoo-tour-check.ts
-
-  ZooTourCheckLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: !Sub /aws/lambda/${ZooTourCheckLambda}
-      RetentionInDays: 30
-      Tags:
-        - Key: 'created-by'
-          Value: 'dbowland-batch'
-        - Key: 'created-for'
-          Value: 'zoo-tour'
-        - Key: 'environment'
-          Value: !Ref Environment
-
-  ZooTourCheckLogGroupSubscription:
-    Type: AWS::Logs::SubscriptionFilter
-    Properties:
-      DestinationArn: !Sub
-        - 'arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:${Function}'
-        - Function: !FindInMap [EnvironmentMap, !Ref Environment, logStreamFunction]
-      FilterPattern: '[timestamp, uuid, level="ERROR", message]'
-      LogGroupName: !Ref ZooTourCheckLogGroup
-
-  ZooTourLambdaInvokePermission:
-    Type: AWS::Lambda::Permission
-    Properties:
-      Action: 'lambda:InvokeFunction'
-      FunctionName: !Sub '${ZooTourCheckLambda.Arn}'
-      Principal: events.amazonaws.com
-      SourceAccount: !Ref AWS::AccountId
-      SourceArn: !Sub 'arn:aws:events:${AWS::Region}:${AWS::AccountId}:rule/*'
-
   # Database
 
   LambdaCleanupTable:
@@ -256,22 +169,3 @@ Resources:
         'created-by': 'dbowland-batch'
         'created-for': 'dbowland'
         'environment': !Ref Environment
-
-  ZooTourTable:
-    Type: AWS::DynamoDB::Table
-    Properties:
-      AttributeDefinitions:
-        - AttributeName: TourId
-          AttributeType: S
-      BillingMode: PAY_PER_REQUEST
-      KeySchema:
-        - AttributeName: TourId
-          KeyType: HASH
-      TableName: !FindInMap [EnvironmentMap, !Ref Environment, zooTourTable]
-      Tags:
-        - Key: 'created-by'
-          Value: 'dbowland-batch'
-        - Key: 'created-for'
-          Value: 'zoo-tour'
-        - Key: 'environment'
-          Value: !Ref Environment
