@@ -2,9 +2,8 @@ import { DynamoDB, ScanCommand, ScanOutput } from '@aws-sdk/client-dynamodb'
 
 import { lambdaCleanupTable } from '../config'
 import { LambdaCleanupProject } from '../types'
-import { xrayCapture } from '../utils/logging'
 
-const dynamodb = xrayCapture(new DynamoDB({ apiVersion: '2012-08-10' }))
+const dynamodb = new DynamoDB({ apiVersion: '2012-08-10' })
 
 /* Lambda cleanup project */
 

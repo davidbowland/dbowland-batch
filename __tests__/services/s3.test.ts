@@ -10,9 +10,6 @@ jest.mock('@aws-sdk/client-s3', () => ({
     send: (...args) => mockSend(...args),
   })),
 }))
-jest.mock('@utils/logging', () => ({
-  xrayCapture: jest.fn().mockImplementation((x) => x),
-}))
 
 describe('S3', () => {
   const bucket = 's3-bucket-name'

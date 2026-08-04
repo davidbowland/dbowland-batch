@@ -124,7 +124,6 @@ Resources:
         'created-for': 'dbowland'
         'environment': !Ref Environment
       Timeout: 180
-      Tracing: Active
     Metadata:
       BuildMethod: esbuild
       BuildProperties:
